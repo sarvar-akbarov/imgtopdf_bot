@@ -1,9 +1,8 @@
 const TelegramBot = require('node-telegram-bot-api')
 const libre = require('libreoffice-convert');
- 
 const path = require('path');
 const fs = require('fs');
-const token = '1692390034:AAFDYkGyjYX2tz5d6EmFYzvZBwXZkTAsWEE'
+const token = '1529120308:AAHRBbd6EyAsrLm1sj1omy4YLNvjPccBIvw'
 const bot = new TelegramBot(token, {
     polling: true
 })
@@ -28,9 +27,6 @@ bot.on("message", async msg=>{
 
   var ready = false
   bot.on('message', async (msg) => {
-    if (msg.text){
-
-    }
     let doc = ''  
     if (msg.document){
         console.log('Document:\n')
@@ -51,30 +47,28 @@ bot.on("message", async msg=>{
 
         // now that we've "file path" we can generate the download link
         const downloadURL = `https://api.telegram.org/file/bot${token}/${filePath}`;
-        
-        const extend = '.pdf'
-        const enterPath = path.join(__dirname, `/${filePath}`);
-        const outputPath = path.join(__dirname, `/pdfs/example${extend}`);
-        
-        console.log('Enter Path: ', enterPath)
-        console.log('Output Path: ', outputPath)
-
-
         // Convert it to pdf format with undefined filter (see Libreoffice doc about filter)
 
         download(downloadURL, path.join(__dirname, `${filePath}`), () =>{
-          ready = true  
-          bot.sendMessage(chatId, 'Nomini kiriting: ')
             // Read file
-            const file = fs.readFileSync(enterPath);
-            libre.convert(file, extend, undefined, (err, done) => {
+            const extend = '.pdf'
+            const FilePath = path.join(__dirname, `./${filePath}`);
+            const outputPath = path.join(__dirname, `./${newFilePath}`);
+            console.log(filePath);
+            console.log('\n');
+            console.log(outputPath);
+            // Read file
+            const enterPath = fs.readFileSync(FilePath);
+            // Convert it to pdf format with undefined filter (see Libreoffice doc about filter)
+            libre.convert(enterPath, extend, undefined, (err, done) => {
                 if (err) {
-                console.log(`Error converting file: ${err}`);
+                  console.log(`Error converting file: ${err}`);
                 }
-                
                 // Here in done you have pdf file which you can save or transfer in another stream
                 fs.writeFileSync(outputPath, done);
-            })
+                bot.sendDocument(chatId, newFilePath);
+            });
+
         });
     }
     if (msg.photo){
@@ -83,7 +77,6 @@ bot.on("message", async msg=>{
         console.log('Begin')
         photo = msg.photo[2]
         const fileId = photo.file_id
-        // const newFilePath = 'pdfs/' + fileName.split('.')[0] + '.pdf'
         const res = await fetch(
           `https://api.telegram.org/bot${token}/getFile?file_id=${fileId}`
         );
@@ -96,8 +89,9 @@ bot.on("message", async msg=>{
         download(downloadURL, path.join(__dirname, `${filePath}`), async () => {  
             const imagesToPdf = require("images-to-pdf")
             await imagesToPdf([filePath], newFilePath)
-            bot.sendDocument(chatId, newFilePath)
+            bot.sendDocument(chatId, newFilePath);
         });
     }  
+
   });    
 })
